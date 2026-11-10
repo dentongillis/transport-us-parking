@@ -24,6 +24,20 @@ python build/layout.py   # only if the row layout changes
 python build/build.py
 ```
 
+## Deploying on Vercel
+
+The repo is set up as a static site: `vercel.json` tells Vercel to skip the build and serve the `app/` folder,
+which fits the free Hobby plan.
+
+1. Sign in at vercel.com with GitHub and choose **Add New > Project**.
+2. Import `transport-us-parking` and click **Deploy**. No settings need changing.
+
+Every push to `main` redeploys. After changing the layout or template, run `python build/build.py` and commit
+the regenerated `app/index.html`, since Vercel does not run the Python build.
+
+**On Vercel the app saves to each device only.** Stall marks are kept in that browser's local storage, are not
+shared between drivers, and photo upload is switched off. See the next section for what sharing needs.
+
 ## How the app stores data
 
 The page was built to run as a Claude artifact. There it uses the artifact's shared database for stall records
