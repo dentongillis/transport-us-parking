@@ -3019,32 +3019,32 @@
    "segments": [
     [
      [
-      -28.7,
+      -25.47,
       152
      ],
      [
-      -27.27,
+      -23.92,
       104.0
      ]
     ],
     [
      [
-      -26.91,
+      -23.54,
       92.0
      ],
      [
-      -22.5,
+      -18.77,
       -56
      ]
     ]
    ],
    "knots": [
     [
-     -28.7,
+     -25.47,
      152
     ],
     [
-     -22.5,
+     -18.77,
      -56
     ]
    ],
@@ -3054,7 +3054,7 @@
    "stall_width_m": 2.95,
    "slot_count": 49,
    "numbering": "01 = north end",
-   "units_in_imagery": 17
+   "units_in_imagery": 8
   },
   {
    "id": "C",
@@ -3291,44 +3291,22 @@
    "name": "Aisle 1 (A-B)",
    "line": [
     [
-     -43.25,
+     -41.63,
      158
     ],
     [
-     -41.9,
+     -40.21,
      88.5
     ],
     [
-     -34.34,
+     -32.5,
      -30
     ]
    ]
   },
   {
    "id": "AISLE-2",
-   "name": "Aisle 2 (B-C)",
-   "line": [
-    [
-     -20.83,
-     158
-    ],
-    [
-     -18.87,
-     88.5
-    ],
-    [
-     -15.19,
-     -30
-    ],
-    [
-     -14.39,
-     -56
-    ]
-   ]
-  },
-  {
-   "id": "AISLE-3",
-   "name": "Aisle 3 (C-D)",
+   "name": "Aisle 2 (C-D)",
    "line": [
     [
      -2.0,
@@ -3349,8 +3327,8 @@
    ]
   },
   {
-   "id": "AISLE-4",
-   "name": "Aisle 4 (E-F)",
+   "id": "AISLE-3",
+   "name": "Aisle 3 (E-F)",
    "line": [
     [
      35.96,
@@ -4057,638 +4035,638 @@
    "id": "B-01",
    "row": "B",
    "index": 1,
-   "x": -28.64,
+   "x": -25.4,
    "y": 150.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5546505,
-   "lng": -85.8825438
+   "lng": -85.8825049
   },
   {
    "id": "B-02",
    "row": "B",
    "index": 2,
-   "x": -28.52,
+   "x": -25.27,
    "y": 146.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5546145,
-   "lng": -85.8825424
+   "lng": -85.8825033
   },
   {
    "id": "B-03",
    "row": "B",
    "index": 3,
-   "x": -28.4,
+   "x": -25.15,
    "y": 142.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5545785,
-   "lng": -85.8825409
+   "lng": -85.8825019
   },
   {
    "id": "B-04",
    "row": "B",
    "index": 4,
-   "x": -28.28,
+   "x": -25.02,
    "y": 138.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5545425,
-   "lng": -85.8825395
+   "lng": -85.8825003
   },
   {
    "id": "B-05",
    "row": "B",
    "index": 5,
-   "x": -28.16,
+   "x": -24.89,
    "y": 134.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5545064,
-   "lng": -85.882538
+   "lng": -85.8824988
   },
   {
    "id": "B-06",
    "row": "B",
    "index": 6,
-   "x": -28.04,
+   "x": -24.76,
    "y": 130.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5544704,
-   "lng": -85.8825366
+   "lng": -85.8824972
   },
   {
    "id": "B-07",
    "row": "B",
    "index": 7,
-   "x": -27.93,
+   "x": -24.63,
    "y": 126.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5544344,
-   "lng": -85.8825353
+   "lng": -85.8824957
   },
   {
    "id": "B-08",
    "row": "B",
    "index": 8,
-   "x": -27.81,
+   "x": -24.5,
    "y": 122.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5543984,
-   "lng": -85.8825338
+   "lng": -85.8824941
   },
   {
    "id": "B-09",
    "row": "B",
    "index": 9,
-   "x": -27.69,
+   "x": -24.37,
    "y": 118.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5543624,
-   "lng": -85.8825324
+   "lng": -85.8824925
   },
   {
    "id": "B-10",
    "row": "B",
    "index": 10,
-   "x": -27.57,
+   "x": -24.24,
    "y": 114.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5543264,
-   "lng": -85.882531
+   "lng": -85.882491
   },
   {
    "id": "B-11",
    "row": "B",
    "index": 11,
-   "x": -27.45,
+   "x": -24.12,
    "y": 110.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5542904,
-   "lng": -85.8825295
+   "lng": -85.8824895
   },
   {
    "id": "B-12",
    "row": "B",
    "index": 12,
-   "x": -27.33,
+   "x": -23.99,
    "y": 106.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5542544,
-   "lng": -85.8825281
+   "lng": -85.882488
   },
   {
    "id": "B-13",
    "row": "B",
    "index": 13,
-   "x": -26.85,
+   "x": -23.47,
    "y": 90.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5541103,
-   "lng": -85.8825223
+   "lng": -85.8824817
   },
   {
    "id": "B-14",
    "row": "B",
    "index": 14,
-   "x": -26.73,
+   "x": -23.34,
    "y": 86.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5540743,
-   "lng": -85.8825209
+   "lng": -85.8824802
   },
   {
    "id": "B-15",
    "row": "B",
    "index": 15,
-   "x": -26.61,
+   "x": -23.21,
    "y": 82.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5540383,
-   "lng": -85.8825194
+   "lng": -85.8824786
   },
   {
    "id": "B-16",
    "row": "B",
    "index": 16,
-   "x": -26.49,
+   "x": -23.09,
    "y": 78.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5540023,
-   "lng": -85.882518
+   "lng": -85.8824772
   },
   {
    "id": "B-17",
    "row": "B",
    "index": 17,
-   "x": -26.38,
+   "x": -22.96,
    "y": 74.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5539662,
-   "lng": -85.8825167
+   "lng": -85.8824756
   },
   {
    "id": "B-18",
    "row": "B",
    "index": 18,
-   "x": -26.26,
+   "x": -22.83,
    "y": 70.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5539302,
-   "lng": -85.8825152
+   "lng": -85.8824741
   },
   {
    "id": "B-19",
    "row": "B",
    "index": 19,
-   "x": -26.14,
+   "x": -22.7,
    "y": 66.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5538942,
-   "lng": -85.8825138
+   "lng": -85.8824725
   },
   {
    "id": "B-20",
    "row": "B",
    "index": 20,
-   "x": -26.02,
+   "x": -22.57,
    "y": 62.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5538582,
-   "lng": -85.8825123
+   "lng": -85.8824709
   },
   {
    "id": "B-21",
    "row": "B",
    "index": 21,
-   "x": -25.9,
+   "x": -22.44,
    "y": 58.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5538222,
-   "lng": -85.8825109
+   "lng": -85.8824694
   },
   {
    "id": "B-22",
    "row": "B",
    "index": 22,
-   "x": -25.78,
+   "x": -22.31,
    "y": 54.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5537862,
-   "lng": -85.8825095
+   "lng": -85.8824678
   },
   {
    "id": "B-23",
    "row": "B",
    "index": 23,
-   "x": -25.66,
+   "x": -22.18,
    "y": 50.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5537502,
-   "lng": -85.882508
+   "lng": -85.8824663
   },
   {
    "id": "B-24",
    "row": "B",
    "index": 24,
-   "x": -25.54,
+   "x": -22.06,
    "y": 46.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5537142,
-   "lng": -85.8825066
+   "lng": -85.8824648
   },
   {
    "id": "B-25",
    "row": "B",
    "index": 25,
-   "x": -25.42,
+   "x": -21.93,
    "y": 42.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5536781,
-   "lng": -85.8825051
+   "lng": -85.8824632
   },
   {
    "id": "B-26",
    "row": "B",
    "index": 26,
-   "x": -25.3,
+   "x": -21.8,
    "y": 38.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5536421,
-   "lng": -85.8825037
+   "lng": -85.8824617
   },
   {
    "id": "B-27",
    "row": "B",
    "index": 27,
-   "x": -25.18,
+   "x": -21.67,
    "y": 34.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5536061,
-   "lng": -85.8825023
+   "lng": -85.8824601
   },
   {
    "id": "B-28",
    "row": "B",
    "index": 28,
-   "x": -25.06,
+   "x": -21.54,
    "y": 30.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5535701,
-   "lng": -85.8825008
+   "lng": -85.8824586
   },
   {
    "id": "B-29",
    "row": "B",
    "index": 29,
-   "x": -24.94,
+   "x": -21.41,
    "y": 26.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": true,
    "lat": 41.5535341,
-   "lng": -85.8824994
+   "lng": -85.882457
   },
   {
    "id": "B-30",
    "row": "B",
    "index": 30,
-   "x": -24.82,
+   "x": -21.28,
    "y": 22.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5534981,
-   "lng": -85.8824979
+   "lng": -85.8824554
   },
   {
    "id": "B-31",
    "row": "B",
    "index": 31,
-   "x": -24.71,
+   "x": -21.15,
    "y": 18.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.5534621,
-   "lng": -85.8824966
+   "lng": -85.8824539
   },
   {
    "id": "B-32",
    "row": "B",
    "index": 32,
-   "x": -24.59,
+   "x": -21.02,
    "y": 14.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": true,
    "lat": 41.553426,
-   "lng": -85.8824952
+   "lng": -85.8824523
   },
   {
    "id": "B-33",
    "row": "B",
    "index": 33,
-   "x": -24.47,
+   "x": -20.9,
    "y": 10.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": true,
    "lat": 41.55339,
-   "lng": -85.8824937
+   "lng": -85.8824509
   },
   {
    "id": "B-34",
    "row": "B",
    "index": 34,
-   "x": -24.35,
+   "x": -20.77,
    "y": 6.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": true,
    "lat": 41.553354,
-   "lng": -85.8824923
+   "lng": -85.8824493
   },
   {
    "id": "B-35",
    "row": "B",
    "index": 35,
-   "x": -24.23,
+   "x": -20.64,
    "y": 2.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.553318,
-   "lng": -85.8824909
+   "lng": -85.8824478
   },
   {
    "id": "B-36",
    "row": "B",
    "index": 36,
-   "x": -24.11,
+   "x": -20.51,
    "y": -2.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": true,
+   "occupied_in_imagery": false,
    "lat": 41.553282,
-   "lng": -85.8824894
+   "lng": -85.8824462
   },
   {
    "id": "B-37",
    "row": "B",
    "index": 37,
-   "x": -23.99,
+   "x": -20.38,
    "y": -6.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.553246,
-   "lng": -85.882488
+   "lng": -85.8824446
   },
   {
    "id": "B-38",
    "row": "B",
    "index": 38,
-   "x": -23.87,
+   "x": -20.25,
    "y": -10.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.55321,
-   "lng": -85.8824865
+   "lng": -85.8824431
   },
   {
    "id": "B-39",
    "row": "B",
    "index": 39,
-   "x": -23.75,
+   "x": -20.12,
    "y": -14.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.553174,
-   "lng": -85.8824851
+   "lng": -85.8824415
   },
   {
    "id": "B-40",
    "row": "B",
    "index": 40,
-   "x": -23.63,
+   "x": -19.99,
    "y": -18.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": true,
    "lat": 41.5531379,
-   "lng": -85.8824837
+   "lng": -85.88244
   },
   {
    "id": "B-41",
    "row": "B",
    "index": 41,
-   "x": -23.51,
+   "x": -19.87,
    "y": -22.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": false,
+   "occupied_in_imagery": true,
    "lat": 41.5531019,
-   "lng": -85.8824822
+   "lng": -85.8824385
   },
   {
    "id": "B-42",
    "row": "B",
    "index": 42,
-   "x": -23.39,
+   "x": -19.74,
    "y": -26.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": true,
    "lat": 41.5530659,
-   "lng": -85.8824808
+   "lng": -85.882437
   },
   {
    "id": "B-43",
    "row": "B",
    "index": 43,
-   "x": -23.27,
+   "x": -19.61,
    "y": -30.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
-   "occupied_in_imagery": false,
+   "occupied_in_imagery": true,
    "lat": 41.5530299,
-   "lng": -85.8824793
+   "lng": -85.8824354
   },
   {
    "id": "B-44",
    "row": "B",
    "index": 44,
-   "x": -23.16,
+   "x": -19.48,
    "y": -34.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5529939,
-   "lng": -85.882478
+   "lng": -85.8824338
   },
   {
    "id": "B-45",
    "row": "B",
    "index": 45,
-   "x": -23.04,
+   "x": -19.35,
    "y": -38.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5529579,
-   "lng": -85.8824766
+   "lng": -85.8824323
   },
   {
    "id": "B-46",
    "row": "B",
    "index": 46,
-   "x": -22.92,
+   "x": -19.22,
    "y": -42.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5529219,
-   "lng": -85.8824751
+   "lng": -85.8824307
   },
   {
    "id": "B-47",
    "row": "B",
    "index": 47,
-   "x": -22.8,
+   "x": -19.09,
    "y": -46.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5528858,
-   "lng": -85.8824737
+   "lng": -85.8824292
   },
   {
    "id": "B-48",
    "row": "B",
    "index": 48,
-   "x": -22.68,
+   "x": -18.96,
    "y": -50.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5528498,
-   "lng": -85.8824723
+   "lng": -85.8824276
   },
   {
    "id": "B-49",
    "row": "B",
    "index": 49,
-   "x": -22.56,
+   "x": -18.84,
    "y": -54.0,
    "heading_deg": 40.0,
    "width_m": 2.95,
    "length_m": 11.5,
    "occupied_in_imagery": false,
    "lat": 41.5528138,
-   "lng": -85.8824708
+   "lng": -85.8824262
   },
   {
    "id": "C-01",

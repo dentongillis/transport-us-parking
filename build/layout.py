@@ -8,7 +8,7 @@ def line(p,q,ya,yb):
     (x0,y0),(x1,y1)=p,q; f=lambda y: x0+(x1-x0)*(y-y0)/(y1-y0); return [(ya,f(ya)),(yb,f(yb))]
 R={
  'A': dict(knots=[(152,-57.8),(88.5,-57.0),(-30,-45.4)], blocks=[(152,-30)], length=11.4),
- 'B': dict(knots=[(152,-28.7),(-56,-22.5)], blocks=[(152,X_N),(X_S,-56)], length=11.5),
+ 'B': dict(knots=[(y, x-12.5) for y, x in line((-9.7,50.5),(-6.4,-52.0),152,-56)], blocks=[(152,X_N),(X_S,-56)], length=11.5),   # back-to-back with row C, no aisle between
  'C': dict(knots=line((-9.7,50.5),(-6.4,-52.0),152,-56), blocks=[(152,X_N),(X_S,-56)], length=9.2),
  'D': dict(knots=line((11.3,80.7),(15.8,-56.6),152,-56), blocks=[(152,X_N),(X_S,-56)], length=9.2),
  'E': dict(knots=line((25.9,79.2),(29.5,-54.4),152,-56), blocks=[(152,X_N),(X_S,-56)], length=8.8),
@@ -39,9 +39,8 @@ for r in rows: r['units_in_imagery']=sum(1 for s in slots if s['row']==r['id'] a
 def mid(a,b,ys): return [[round((xat(R[a]['knots'],y)+xat(R[b]['knots'],y))/2,2),y] for y in ys]
 ys=[158,88.5,-30,-56]
 aisles=[dict(id='AISLE-1',name='Aisle 1 (A-B)',line=mid('A','B',[158,88.5,-30])),
-        dict(id='AISLE-2',name='Aisle 2 (B-C)',line=mid('B','C',ys)),
-        dict(id='AISLE-3',name='Aisle 3 (C-D)',line=mid('C','D',ys)),
-        dict(id='AISLE-4',name='Aisle 4 (E-F)',line=mid('E','F',ys)),
+        dict(id='AISLE-2',name='Aisle 2 (C-D)',line=mid('C','D',ys)),
+        dict(id='AISLE-3',name='Aisle 3 (E-F)',line=mid('E','F',ys)),
         dict(id='CROSS-N',name='North cross aisle',line=[[-52,158.5],[54,158.5]]),
         dict(id='CROSS-M',name='Middle cross aisle',line=[[-46,98],[42,98]]),
         dict(id='CROSS-S',name='South cross aisle',line=[[-38,-64],[42,-64]])]
