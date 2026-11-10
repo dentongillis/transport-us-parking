@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transport US Lot</title>
+<style>
+  :root { --ink:#1b2226; --muted:#65727a; --line:#dde2df; --panel:#f6f5f1; --card:#fff; --accent:#1f5f8b;
+          --red:#cf3e2e; --green:#2f9a55; --yellow:#f2b705; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:#d5ddd8; overflow:hidden; }
+  #app { display:grid; grid-template-columns:1fr 380px; height:100dvh; }
+  #view { position:relative; min-height:0; overflow:hidden; }
+  canvas#c { display:block; width:100%; height:100%; touch-action:none; }
+  button { font:inherit; font-size:14px; padding:9px 12px; border:1px solid var(--line); background:#fff; border-radius:8px; cursor:pointer; color:var(--ink); }
+  button:disabled { opacity:.5; cursor:default; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  button.danger { color:var(--red); border-color:#ecc4be; }
+  button.danger.arm { background:var(--red); border-color:var(--red); color:#fff; }
+  button.link { border:0; background:none; padding:4px 0; color:var(--accent); }
+  #bar { position:absolute; top:10px; left:10px; display:flex; gap:6px; }
+  #bar button { padding:7px 10px; font-size:13px; }
+  #compass { position:absolute; right:10px; top:10px; background:#fff; border:1px solid var(--line); border-radius:50%; width:40px; height:40px; display:grid; place-items:center; font-weight:700; font-size:11px; }
+  #legend { position:absolute; left:10px; bottom:10px; display:flex; gap:12px; font-size:12px; background:rgba(255,255,255,.9); padding:6px 10px; border-radius:8px; }
+  #legend i, .dot { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  #moveBanner { position:absolute; top:56px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:9px 14px; border-radius:10px; font-size:14px; display:flex; gap:12px; align-items:center; white-space:nowrap; }
+  #moveBanner button { padding:4px 10px; font-size:13px; }
+  #load { position:absolute; inset:0; display:grid; place-items:center; font-size:14px; color:var(--muted); pointer-events:none; }
+
+  aside { background:var(--panel); border-left:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  #grab { display:none; }
+  header { padding:14px 16px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  h1 { font-size:17px; margin:0; letter-spacing:-.01em; white-space:nowrap; }
+  #status { font-size:12px; color:var(--muted); white-space:nowrap; }
+  #status::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:#b5bcc0; margin-right:6px; }
+  #status.live::before { background:var(--green); } #status.warn::before { background:var(--yellow); } #status.bad::before { background:var(--red); }
+  #scroll { overflow:auto; padding:0 16px 20px; flex:1; -webkit-overflow-scrolling:touch; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center; margin-bottom:12px; }
+  .stats div { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 4px; }
+  .stats b { display:block; font-size:20px; font-variant-numeric:tabular-nums; } .stats span { font-size:11px; color:var(--muted); }
+  input[type=text], input[type=search], textarea { font:inherit; font-size:16px; width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+  textarea { resize:vertical; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+  .chip { padding:7px 11px; border-radius:999px; font-size:13px; }
+  .chip.on { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .chip small { opacity:.65; margin-left:4px; }
+  ul { list-style:none; margin:0; padding:0; }
+  #list li { display:flex; align-items:center; gap:10px; padding:11px 2px; border-top:1px solid var(--line); cursor:pointer; }
+  #list li .t { flex:1; min-width:0; } #list li .t b { display:block; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #list li .t span { font-size:12px; color:var(--muted); }
+  #list li .sid { font-weight:700; font-variant-numeric:tabular-nums; font-size:14px; }
+  .empty { font-size:14px; color:var(--muted); padding:14px 0; }
+  .note { font-size:12px; color:var(--muted); line-height:1.45; margin-top:10px; }
+  .sid-big { font-size:30px; font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px; color:#fff; vertical-align:6px; margin-left:8px; }
+  .badge.open { background:var(--green); } .badge.occ { background:var(--red); }
+  .sub { font-size:13px; color:var(--muted); margin:2px 0 12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px; }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:6px 14px; margin:0; font-size:14px; }
+  dt { color:var(--muted); } dd { margin:0; overflow-wrap:anywhere; }
+  label.f { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; font-weight:600; }
+  .row { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; } .row button { flex:1; }
+  .photos { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .photos .ph { position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:#e7e9e6; }
+  .photos img { width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
+  .photos .x { position:absolute; top:4px; right:4px; width:26px; height:26px; padding:0; border-radius:50%; background:rgba(0,0,0,.65); color:#fff; border:0; font-size:15px; line-height:1; }
+  .photos .add { display:grid; place-items:center; border:1.5px dashed #b9c1bd; background:none; color:var(--muted); font-size:13px; border-radius:8px; aspect-ratio:1; padding:4px; }
+  #lightbox { position:fixed; inset:0; background:rgba(0,0,0,.9); display:grid; place-items:center; z-index:50; }
+  #lightbox img { max-width:96vw; max-height:92dvh; }
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:10px; font-size:14px; z-index:60; max-width:90vw; }
+  [hidden] { display:none !important; }
+
+  @media (max-width: 760px) {
+    #app { display:block; }
+    #view { height:100dvh; }
+    aside { position:fixed; left:0; right:0; bottom:0; max-height:68dvh; border-left:0; border-top:1px solid var(--line); border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); transition:max-height .2s ease; }
+    aside.peek { max-height:136px; } aside.peek #scroll { overflow:hidden; }
+    #grab { display:block; width:100%; border:0; background:none; padding:8px 0 0; } #grab::before { content:""; display:block; width:40px; height:4px; border-radius:2px; background:#c3cac6; margin:0 auto; }
+    header { padding:6px 16px 8px; }
+    #legend { bottom:146px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="view">
+    <canvas id="c"></canvas>
+    <div id="load">Loading lot…</div>
+    <div id="bar">
+      <button id="bTop">Map</button>
+      <button id="b3d">3D</button>
+      <button id="bEntr">Entrance</button>
+    </div>
+    <div id="compass" title="North"><span id="needle">N↑</span></div>
+    <div id="legend"><span><i style="background:var(--green)"></i>Open</span><span><i style="background:var(--red)"></i>Occupied</span><span><i style="background:var(--yellow)"></i>Selected</span></div>
+    <div id="moveBanner" hidden><span id="moveText"></span><button id="bMoveCancel">Cancel</button></div>
+  </div>
+
+  <aside id="panel" class="peek">
+    <button id="grab" aria-label="Expand or collapse panel"></button>
+    <header><h1>Transport US Lot</h1><span id="status">Connecting…</span></header>
+    <div id="scroll">
+
+      <!-- HOME: search + list -->
+      <section id="vHome">
+        <div class="stats">
+          <div><b id="sOpen" style="color:var(--green)">–</b><span>open</span></div>
+          <div><b id="sOcc" style="color:var(--red)">–</b><span>occupied</span></div>
+          <div><b id="sTotal">–</b><span>stalls</span></div>
+        </div>
+        <input id="q" type="search" placeholder="Find a unit # or stall (e.g. C-12)" autocomplete="off">
+        <div class="chips" id="typeFilter"></div>
+        <ul id="list"></ul>
+        <div class="empty" id="listEmpty">No units are marked yet. Tap a green stall on the map to park one.</div>
+        <div class="note" id="roNote" hidden>You can view the lot, but you don't have permission to change stalls.</div>
+      </section>
+
+      <!-- STALL: detail / form -->
+      <section id="vStall" hidden>
+        <button class="link" id="bBack">‹ All units</button>
+        <div><span class="sid-big" id="dId"></span><span class="badge" id="dBadge"></span></div>
+        <div class="sub" id="dWhere"></div>
+
+        <div id="dView">
+          <div class="card">
+            <dl>
+              <dt>Type</dt><dd id="dType"></dd>
+              <dt>Unit #</dt><dd id="dUnit"></dd>
+              <dt>VIN</dt><dd id="dVin"></dd>
+              <dt>Make / model</dt><dd id="dModel"></dd>
+              <dt>Parked</dt><dd id="dAt"></dd>
+              <dt>By</dt><dd id="dBy"></dd>
+              <dt>Notes</dt><dd id="dNotes"></dd>
+            </dl>
+          </div>
+          <div class="photos" id="dPhotos"></div>
+          <div class="row" id="dActions">
+            <button id="bEdit">Edit</button>
+            <button id="bMove">Move</button>
+            <button id="bGone" class="danger">Picked up</button>
+          </div>
+        </div>
+
+        <form id="dForm" hidden>
+          <label class="f">What kind of unit?</label>
+          <div class="chips" id="typePick"></div>
+          <label class="f" for="fUnit">Unit #</label>
+          <input id="fUnit" type="text" maxlength="24" autocomplete="off" autocapitalize="characters">
+          <label class="f" for="fVin">VIN (last 8)</label>
+          <input id="fVin" type="text" maxlength="17" autocomplete="off" autocapitalize="characters">
+          <label class="f" for="fModel">Make / model</label>
+          <input id="fModel" type="text" maxlength="48" autocomplete="off">
+          <label class="f" for="fNotes">Notes</label>
+          <textarea id="fNotes" rows="2" maxlength="300"></textarea>
+          <label class="f">Photos</label>
+          <div class="photos" id="fPhotos"></div>
+          <div class="note" id="photoNote" hidden>Photo upload isn't available in this view.</div>
+          <input id="file" type="file" accept="image/*" multiple hidden>
+          <div class="row">
+            <button type="button" id="bCancel">Cancel</button>
+            <button type="submit" class="primary" id="bSave">Park unit here</button>
+          </div>
+        </form>
+        <div class="note" id="gps"></div>
+      </section>
+    </div>
+  </aside>
+</div>
+<div id="lightbox" hidden><img id="lbImg" alt="Unit photo"></div>
+<div id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script id="glb" type="application/octet-stream">__GLB__</script>
+<script>
+const LOT = /*__LOT__*/null;
+const $ = id => document.getElementById(id);
+const TYPES = [['fifth_wheel', 'Fifth wheel'], ['travel_trailer', 'Travel trailer'], ['toy_hauler', 'Toy hauler'], ['park_model', 'Park model'],
+               ['camper_van', 'Camper van'], ['motorhome', 'Motorhome'], ['other', 'Other']];
+const TYPE_NAME = Object.fromEntries(TYPES);
+const MAX_PHOTOS = 6;
+const mobile = () => matchMedia('(max-width: 760px)').matches;
+
+/* ================= 3D scene ================= */
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = !mobile(); renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xd5ddd8);
+scene.fog = new THREE.Fog(0xd5ddd8, 700, 1500);
+const camera = new THREE.PerspectiveCamera(45, 1, 1, 2500);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2 - 0.04;
+controls.minDistance = 15; controls.maxDistance = 800; controls.screenSpacePanning = false;
+controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa38f, 0.62));
+const sun = new THREE.DirectionalLight(0xfff4e0, 0.72);
+sun.position.set(-220, 300, 160); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005;
+Object.assign(sun.shadow.camera, { left: -200, right: 200, top: 360, bottom: -320, near: 10, far: 900 });
+scene.add(sun);
+
+const COL = { open: 0x58b574, occ: 0xcf3e2e, sel: 0xf2b705 };
+const pick = [], mesh = {}, slot = {};
+LOT.slots.forEach(s => slot[s.id] = s);
+
+function label(text, x, y, h, size, bg) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+  const k = c.getContext('2d');
+  k.font = '600 44px system-ui, sans-serif'; const w = Math.min(246, k.measureText(text).width + 36);
+  k.fillStyle = bg || 'rgba(27,34,38,.88)';
+  const x0 = (256 - w) / 2; k.beginPath(); k.moveTo(x0 + 14, 14); k.arcTo(x0 + w, 14, x0 + w, 82, 14); k.arcTo(x0 + w, 82, x0, 82, 14); k.arcTo(x0, 82, x0, 14, 14); k.arcTo(x0, 14, x0 + w, 14, 14); k.fill();
+  k.fillStyle = '#fff'; k.textAlign = 'center'; k.textBaseline = 'middle'; k.fillText(text, 128, 50, 230);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
+  s.scale.set(size * 2.67, size, 1); s.position.set(x, h, -y); s.renderOrder = 10; scene.add(s);
+}
+LOT.rows.forEach(r => { const a = r.segments[0][0], ew = r.id === 'N' || r.id === 'M';
+  label(r.name, a[0] - (ew ? 12 : 0), a[1] + (ew ? 0 : 9), 6, 8); });
+LOT.zones.forEach(z => label(z.name, z.x, z.y, 4, 7, 'rgba(140,100,20,.88)'));
+LOT.aisles.forEach(a => { const i = Math.floor(a.line.length / 2), p = a.line[i], q = a.line[i - 1] || p;
+  label(a.name.replace(/ \(.*/, ''), (p[0] + q[0]) / 2, (p[1] + q[1]) / 2, 2.5, 5.5, 'rgba(90,96,100,.8)'); });
+label('Office', -22.5, -117, 11, 8, 'rgba(31,95,139,.92)');
+label('Entrance · CR 38', 30, -188, 6, 9, 'rgba(31,95,139,.92)');
+
+(function loadModel() {
+  const bin = atob($('glb').textContent.trim()), buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  new THREE.GLTFLoader().parse(buf.buffer, '', g => {
+    g.scene.traverse(o => {
+      if (!o.isMesh) return;
+      const n = o.name || (o.parent && o.parent.name) || '';
+      const flat = /^(surf_|ground|slot_|zone_|basin_floor|basin_water|cr38_|visitor_|aisle_)/.test(n);
+      o.castShadow = !flat; o.receiveShadow = true;
+      const m = n.match(/^slot_(.+)$/);
+      if (m && slot[m[1]]) { o.material = o.material.clone(); o.userData.id = m[1]; pick.push(o); mesh[m[1]] = o; }
+    });
+    scene.add(g.scene); $('load').remove(); paintAll(); window.__ready = true;
+  }, () => { $('load').textContent = 'The lot model failed to load.'; });
+})();
+
+let tween = null;
+function fly(pos, tgt) { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: new THREE.Vector3(...pos), t1: new THREE.Vector3(...tgt), s: performance.now() }; }
+function focusOn(id) { const d = slot[id], off = mobile() ? 18 : 0; fly([d.x, 95, -d.y + 60 + off], [d.x, 0, -d.y + off]); }
+$('bTop').onclick = () => fly([0, mobile() ? 640 : 520, -39.9], [0, 0, -40]);
+$('b3d').onclick = () => fly([-230, 190, 250], [0, 0, -20]);
+$('bEntr').onclick = () => fly([40, 30, 285], [14, 0, 70]);
+if (mobile()) { camera.position.set(0, 640, -39.9); controls.target.set(0, 0, -40); }
+else { camera.position.set(-230, 190, 250); controls.target.set(0, 0, -20); }
+
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio();
+  if (canvas.width !== Math.floor(w * pr) || canvas.height !== Math.floor(h * pr)) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+}
+const dir = new THREE.Vector3();
+(function loop() {
+  requestAnimationFrame(loop); resize();
+  if (tween) { tween.k = Math.min(1, (performance.now() - tween.s) / 700); const e = 1 - Math.pow(1 - tween.k, 3);
+    camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0, tween.t1, e); if (tween.k >= 1) tween = null; }
+  controls.update();
+  camera.getWorldDirection(dir);
+  $('needle').style.transform = 'rotate(' + (-Math.atan2(dir.x, -dir.z)) + 'rad)';
+  renderer.render(scene, camera);
+})();
+
+/* ================= data ================= */
+let db = null, assets = null, user = null, myId = null, canWrite = true, localMode = false;
+let stalls = {};            // stall id -> record (only occupied stalls have one)
+let selected = null, editing = false, moving = null, busy = false;
+const LOCAL_KEY = 'tus-lot-app-v1';
+
+function setStatus(text, cls) { const s = $('status'); s.textContent = text; s.className = cls || ''; }
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 3200); }
+const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
+const okId = id => typeof id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(id);
+function normalize(d) {   // shared data is untrusted: coerce every field
+  d = d && typeof d === 'object' ? d : {};
+  return { type: TYPE_NAME[d.type] ? d.type : 'other', unit: clean(d.unit, 24), vin: clean(d.vin, 17), model: clean(d.model, 48),
+           notes: clean(d.notes, 300), photos: (Array.isArray(d.photos) ? d.photos : []).filter(okId).slice(0, MAX_PHOTOS),
+           by: okId(d.by) || (typeof d.by === 'string' && d.by.length < 80) ? d.by : '', at: clean(d.at, 30) };
+}
+
+function paint(id) {
+  const m = mesh[id]; if (!m) return;
+  const c = id === selected ? COL.sel : stalls[id] ? COL.occ : COL.open;
+  m.material.color.setHex(c).convertSRGBToLinear();
+  m.position.y = id === selected ? 0.14 : 0;
+}
+function paintAll() { Object.keys(mesh).forEach(paint); }
+
+function applySnapshot(next) {
+  const ids = new Set([...Object.keys(stalls), ...Object.keys(next)]);
+  stalls = next; ids.forEach(paint); renderHome();
+  if (selected && !editing) renderStall();
+}
+
+async function boot() {
+  const C = window.claude && typeof window.claude.use === 'function' ? window.claude : null;
+  if (C) { try { [db, user, assets] = await Promise.all([C.use('db'), C.use('user'), C.use('assets')]); } catch (e) { db = null; } }
+  if (!db) {
+    localMode = true; assets = null;
+    try { const raw = JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}'); const n = {}; Object.keys(raw).forEach(k => { if (slot[k]) n[k] = normalize(raw[k]); }); applySnapshot(n); } catch (e) { applySnapshot({}); }
+    setStatus('This device only', 'warn'); return;
+  }
+  if (user) { try { myId = await user.id(); if ((await user.can('data.write')) === false) canWrite = false; } catch (e) {} }
+  $('roNote').hidden = canWrite;
+  setStatus('Loading…');
+  const slow = setTimeout(() => setStatus("Can't reach lot data yet", 'warn'), 10000);
+  db.collection('stalls').onSnapshot(snap => {
+    const n = {}; snap.docs.forEach(d => { if (slot[d.id]) n[d.id] = normalize(d.data()); });
+    applySnapshot(n);
+    if (!snap.metadata.fromCache) { clearTimeout(slow); setStatus('Live', 'live'); }
+  }, () => { clearTimeout(slow); setStatus('Lot data unavailable', 'bad'); });
+}
+
+async function writeStall(id, rec) {       // rec = null clears the stall
+  if (localMode) {
+    const n = Object.assign({}, stalls); if (rec) n[id] = rec; else delete n[id];
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(n)); } catch (e) {}
+    applySnapshot(n); return;
+  }
+  const ref = db.doc('stalls/' + id);
+  const merged = () => { const n = Object.assign({}, stalls); if (rec) n[id] = rec; else delete n[id]; applySnapshot(n); };
+  const once = () => rec ? ref.set(rec) : ref.delete();
+  try { await once(); }
+  catch (e) {
+    if (e && e.code === 'unavailable') { await new Promise(r => setTimeout(r, 600 + Math.random() * 600)); await once(); }
+    else { if (e && e.code === 'invalid_argument') { canWrite = false; $('roNote').hidden = false; } throw e; }
+  }
+  merged();
+}
+function fail(e) {
+  const c = e && e.code;
+  toast(c === 'invalid_argument' ? "You don't have permission to change stalls." : c === 'quota_exceeded' ? 'Lot storage is full.' :
+        c === 'revoked' ? 'Your access to this lot changed. Reload to continue.' : "Couldn't save. Check your connection and try again.");
+}
+
+/* ================= home view ================= */
+let typeFilter = null;
+TYPES.forEach(([k, name]) => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.k = k; b.textContent = name;
+  b.append(document.createElement('small'));
+  b.onclick = () => { typeFilter = typeFilter === k ? null : k; renderHome(); };
+  $('typeFilter').append(b);
+  const p = document.createElement('button'); p.type = 'button'; p.className = 'chip'; p.dataset.k = k; p.textContent = name;
+  p.onclick = () => { draft.type = k; renderForm(); };
+  $('typePick').append(p);
+});
+function renderHome() {
+  const ids = Object.keys(stalls), total = LOT.slots.length;
+  $('sOcc').textContent = ids.length; $('sOpen').textContent = total - ids.length; $('sTotal').textContent = total;
+  const counts = {}; ids.forEach(i => counts[stalls[i].type] = (counts[stalls[i].type] || 0) + 1);
+  [...$('typeFilter').children].forEach(b => { b.classList.toggle('on', b.dataset.k === typeFilter); b.lastChild.textContent = counts[b.dataset.k] || ''; b.hidden = !counts[b.dataset.k] && b.dataset.k !== typeFilter; });
+  const q = $('q').value.trim().toLowerCase(), ul = $('list'); ul.textContent = '';
+  const stallHit = q && LOT.slots.find(s => s.id.toLowerCase() === q || s.id.toLowerCase().replace('-', '') === q.replace(/[\s-]/g, ''));
+  const rows = ids.filter(i => (!typeFilter || stalls[i].type === typeFilter) &&
+    (!q || [i, stalls[i].unit, stalls[i].vin, stalls[i].model].some(v => v.toLowerCase().includes(q)))).sort();
+  if (stallHit && !rows.includes(stallHit.id)) rows.unshift(stallHit.id);
+  rows.slice(0, 400).forEach(id => {
+    const r = stalls[id], li = document.createElement('li'), d = document.createElement('span'), t = document.createElement('span'), b = document.createElement('b'), s = document.createElement('span'), sid = document.createElement('span');
+    d.className = 'dot'; d.style.background = r ? 'var(--red)' : 'var(--green)';
+    t.className = 't'; b.textContent = r ? (r.unit || 'No unit #') : 'Open stall'; s.textContent = r ? TYPE_NAME[r.type] + (r.model ? ' · ' + r.model : '') : 'Tap to park a unit here';
+    t.append(b, s); sid.className = 'sid'; sid.textContent = id; li.append(d, t, sid);
+    li.onclick = () => { select(id); focusOn(id); }; ul.append(li);
+  });
+  $('listEmpty').hidden = rows.length > 0;
+  $('listEmpty').textContent = ids.length ? 'Nothing matches that search.' : canWrite ? 'No units are marked yet. Tap a green stall on the map to park one.' : 'No units are marked yet.';
+}
+$('q').addEventListener('input', renderHome);
+$('q').addEventListener('focus', () => $('panel').classList.remove('peek'));
+
+/* ================= stall view ================= */
+let draft = null;      // {type, unit, vin, model, notes, photos:[ids]}
+function select(id) {
+  const prev = selected; selected = id; editing = false; draft = null; gone(false);
+  if (prev) paint(prev); if (id) paint(id);
+  $('vHome').hidden = !!id; $('vStall').hidden = !id;
+  if (id) { $('panel').classList.remove('peek'); $('scroll').scrollTop = 0; renderStall(); }
+}
+function photoEl(id, onRemove) {
+  const w = document.createElement('div'); w.className = 'ph';
+  const img = document.createElement('img'); img.alt = 'Unit photo'; img.loading = 'lazy'; img.src = '/_blob/' + id;
+  img.onerror = () => { img.remove(); w.title = 'Photo unavailable'; };
+  img.onclick = () => { $('lbImg').src = img.src; $('lightbox').hidden = false; };
+  w.append(img);
+  if (onRemove) { const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', 'Remove photo'); x.onclick = onRemove; w.append(x); }
+  return w;
+}
+$('lightbox').onclick = () => $('lightbox').hidden = true;
+
+function renderStall() {
+  const id = selected, s = slot[id], r = stalls[id];
+  $('dId').textContent = id;
+  $('dBadge').textContent = r ? 'Occupied' : 'Open'; $('dBadge').className = 'badge ' + (r ? 'occ' : 'open');
+  $('dWhere').textContent = s.row === 'N' || s.row === 'M' ? 'Row ' + s.row + ' (north edge), stall ' + s.index + ' from the west' : 'Row ' + s.row + ', stall ' + s.index + ' from the north end';
+  $('gps').textContent = 'GPS ' + s.lat.toFixed(6) + ', ' + s.lng.toFixed(6);
+  if (!r && canWrite && !moving) { if (!editing) startEdit(); return; }
+  if (editing) return;
+  $('dForm').hidden = true; $('dView').hidden = false;
+  $('dView').firstElementChild.hidden = !r; $('dActions').hidden = !r || !canWrite; $('dPhotos').textContent = '';
+  if (!r) return;
+  $('dType').textContent = TYPE_NAME[r.type]; $('dUnit').textContent = r.unit || '–'; $('dVin').textContent = r.vin || '–';
+  $('dModel').textContent = r.model || '–'; $('dNotes').textContent = r.notes || '–';
+  const t = new Date(r.at); $('dAt').textContent = isNaN(t) ? '–' : t.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  $('dBy').textContent = r.by && r.by === myId ? 'You' : '–';
+  if (user && r.by && r.by !== myId && !localMode) user.profiles([r.by]).then(ps => { if (selected === id && ps && ps[r.by]) $('dBy').textContent = ps[r.by].name || 'Someone'; }).catch(() => {});
+  r.photos.forEach(p => $('dPhotos').append(photoEl(p)));
+}
+function startEdit() {
+  const r = stalls[selected];
+  draft = r ? { type: r.type, unit: r.unit, vin: r.vin, model: r.model, notes: r.notes, photos: r.photos.slice() } : { type: null, unit: '', vin: '', model: '', notes: '', photos: [] };
+  editing = true; $('dView').hidden = true; $('dForm').hidden = false;
+  $('fUnit').value = draft.unit; $('fVin').value = draft.vin; $('fModel').value = draft.model; $('fNotes').value = draft.notes;
+  $('bSave').textContent = r ? 'Save changes' : 'Park unit here'; $('bCancel').textContent = r ? 'Cancel' : 'Close';
+  renderForm();
+}
+function renderForm() {
+  [...$('typePick').children].forEach(b => b.classList.toggle('on', b.dataset.k === draft.type));
+  $('bSave').disabled = !draft.type || busy;
+  const box = $('fPhotos'); box.textContent = '';
+  draft.photos.forEach((p, i) => box.append(photoEl(p, () => { draft.photos.splice(i, 1); renderForm(); })));
+  if (assets && draft.photos.length < MAX_PHOTOS) { const a = document.createElement('button'); a.type = 'button'; a.className = 'add'; a.textContent = busy === 'photo' ? 'Uploading…' : '+ Add photo'; a.disabled = !!busy; a.onclick = () => $('file').click(); box.append(a); }
+  $('photoNote').hidden = !!assets;
+}
+async function shrink(file) {              // phone photos are large: resize to 1600 px JPEG before upload
+  let src; try { src = await createImageBitmap(file); } catch (e) {
+    src = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+  }
+  const k = Math.min(1, 1600 / Math.max(src.width, src.height)), cv = document.createElement('canvas');
+  cv.width = Math.round(src.width * k); cv.height = Math.round(src.height * k); cv.getContext('2d').drawImage(src, 0, 0, cv.width, cv.height);
+  return new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('encode')), 'image/jpeg', 0.85));
+}
+$('file').addEventListener('change', async e => {
+  const files = [...e.target.files].slice(0, MAX_PHOTOS - draft.photos.length); e.target.value = '';
+  if (!files.length || !assets || busy) return;
+  busy = 'photo'; renderForm();
+  for (const f of files) {
+    try { const up = await assets.upload(await shrink(f), { type: 'image/jpeg' }); if (draft && okId(up.id)) draft.photos.push(up.id); }
+    catch (err) { const c = err && err.code; toast(c === 'too_large' ? 'That photo is too large.' : c === 'quota_or_state' ? 'Photo storage is full.' : c === 'rate_limited' ? 'Too many uploads – wait a moment.' : "Couldn't upload that photo."); break; }
+  }
+  busy = false; if (draft) renderForm();
+});
+$('dForm').addEventListener('submit', async e => {
+  e.preventDefault(); if (!draft || !draft.type || busy) return;
+  const id = selected, old = stalls[id];
+  const rec = { type: draft.type, unit: $('fUnit').value.trim(), vin: $('fVin').value.trim().toUpperCase(), model: $('fModel').value.trim(), notes: $('fNotes').value.trim(),
+                photos: draft.photos.slice(0, MAX_PHOTOS), by: old ? old.by : (myId || ''), at: old ? old.at : new Date().toISOString() };
+  busy = true; renderForm();
+  try {
+    await writeStall(id, rec);
+    if (old && assets) old.photos.filter(p => !rec.photos.includes(p)).forEach(p => assets.delete(p).catch(() => {}));
+    editing = false; draft = null; toast(old ? 'Saved' : 'Parked in ' + id); if (selected === id) renderStall();
+  } catch (err) { fail(err); }
+  busy = false; if (draft) renderForm();
+});
+$('bCancel').onclick = () => { if (stalls[selected]) { editing = false; draft = null; renderStall(); } else select(null); };
+$('bEdit').onclick = startEdit;
+$('bBack').onclick = () => select(null);
+
+function gone(arm) { const b = $('bGone'); b.classList.toggle('arm', arm); b.textContent = arm ? 'Tap again to clear stall' : 'Picked up'; clearTimeout(gone.t); if (arm) gone.t = setTimeout(() => gone(false), 4000); }
+$('bGone').onclick = async () => {
+  if (busy) return; if (!$('bGone').classList.contains('arm')) return gone(true);
+  const id = selected, old = stalls[id]; busy = true;
+  try { await writeStall(id, null); if (old && assets) old.photos.forEach(p => assets.delete(p).catch(() => {})); toast(id + ' is open'); select(null); } catch (err) { fail(err); }
+  busy = false; gone(false);
+};
+$('bMove').onclick = () => { moving = selected; $('moveText').textContent = 'Tap the new stall for ' + (stalls[moving].unit || 'this unit'); $('moveBanner').hidden = false; $('panel').classList.add('peek'); };
+$('bMoveCancel').onclick = () => { moving = null; $('moveBanner').hidden = true; };
+async function moveTo(dest) {
+  const from = moving, rec = stalls[from];
+  if (!rec || dest === from) return; if (stalls[dest]) return toast(dest + ' is occupied – pick an open stall.');
+  busy = true;
+  try { await writeStall(dest, rec); await writeStall(from, null); toast('Moved to ' + dest); moving = null; $('moveBanner').hidden = true; select(dest); }
+  catch (err) { fail(err); }
+  busy = false;
+}
+
+/* ================= picking ================= */
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
+canvas.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
+canvas.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+  const r = canvas.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(pick)[0], id = hit && hit.object.userData.id;
+  if (moving) { if (id && !busy) moveTo(id); return; }
+  if (id) select(id); else if (!editing) select(null);
+});
+$('grab').onclick = () => $('panel').classList.toggle('peek');
+
+renderHome();
+boot();
+</script>
+</body>
+</html>
