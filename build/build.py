@@ -68,11 +68,26 @@ surfaces = [
     dict(id="cr38", kind="road", name="County Road 38", polygon=rect(-300, -202, 300, -194)),
     dict(id="side_road", kind="road", name="Side road", polygon=rect(73, -290, 79, -202)),
 ]
-basin_outer = Polygon(stadium(-11, 241.5, 57, 25.5))
-basin_inner = Polygon(stadium(-9, 236, 49, 15))
-basin = dict(id="retention_basin", name="Retention basin", berm_outer=ring(basin_outer), berm_inner=ring(basin_inner),
-             water=stadium(-5.5, 231, 43.5, 8.5), berm_height=1.2,
-             structures=[[-20, 269], [7, 269], [-37, 210], [27, 210]])
+# Retention pond: a sunken basin with sloped grass banks, not a raised wall. Three matching rings are lofted:
+# the rim at grade, a bench part-way down, and the water's edge.
+def basin_ring(cx, cy, rx, ry, wobble=0.0, n=96, e=0.62):
+    out = []
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        k = 1 + wobble * (math.sin(3 * t + 1.0) * 0.6 + math.sin(7 * t + 0.4) * 0.4)
+        c, sn = math.cos(t), math.sin(t)
+        out.append([round(cx + rx * k * math.copysign(abs(c) ** e, c), 2), round(cy + ry * k * math.copysign(abs(sn) ** e, sn), 2)])
+    return out
+
+
+BASIN_DEPTH, BENCH_DEPTH = 2.4, 0.9
+basin_rim = basin_ring(-11, 241.5, 57, 25.5)
+basin_bench = basin_ring(-8.5, 237.5, 50.5, 17.5, 0.03)
+basin_shore = basin_ring(-5.5, 232.5, 44, 10, 0.07)
+basin_outer = Polygon(basin_rim)
+basin = dict(id="retention_basin", name="Retention pond", rim=basin_rim, bench=basin_bench, water=basin_shore,
+             bench_depth_m=BENCH_DEPTH, water_depth_below_grade_m=BASIN_DEPTH,
+             structures=[[-20, 270.5], [7, 270.5], [-37, 212.5], [27, 212.5]])
 
 # ---------------- buildings ----------------
 # roof: "ns"/"ew" = ridge direction, "flat"
@@ -163,8 +178,8 @@ json.dump(lot, open(os.path.join(ROOT, "model", "transport_us_lot.json"), "w"), 
 
 # ================= GLB =================
 C = dict(ground=[104, 134, 78], field=[172, 152, 116], gravel=[182, 176, 164], pavement=[122, 124, 128],
-         road=[84, 86, 90], concrete=[206, 204, 196], berm=[92, 128, 70], basin_floor=[84, 108, 66],
-         water=[52, 78, 76], wall_grey=[196, 196, 192], wall_white=[236, 236, 232], roof_green=[92, 128, 110],
+         road=[84, 86, 90], concrete=[206, 204, 196], berm=[98, 132, 72], basin_floor=[82, 108, 62],
+         water=[62, 112, 138], reeds=[122, 128, 70], wall_grey=[196, 196, 192], wall_white=[236, 236, 232], roof_green=[92, 128, 110],
          roof_dark=[78, 80, 86], roof_grey=[150, 154, 160], roof_brown=[124, 92, 70], bin=[176, 180, 182],
          tree=[58, 100, 56], woods=[44, 86, 46], trunk=[92, 72, 52], slot=[244, 243, 238], zone=[226, 180, 90],
          line=[232, 208, 96], stripe=[236, 236, 230])
@@ -179,6 +194,8 @@ def mat(name, rgb, alpha=255):
 
 MATS = {k: mat(k, v) for k, v in C.items()}
 MATS["zone"] = mat("zone", C["zone"], 120)
+for _k in ("berm", "basin_floor"):          # open lofted surfaces: draw both faces
+    MATS[_k].doubleSided = True
 TO_GLTF = trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0])   # (x, north, up) -> (X, up, -north)
 scene = trimesh.Scene()
 
@@ -228,7 +245,7 @@ def tree_mesh(items, trunk=True):
 
 
 # ground + surfaces
-add("ground", ext(rect(-300, -420, 300, 480), 0.5, -0.5), "ground")
+add("ground", ext(Polygon(rect(-300, -420, 300, 480)).difference(basin_outer), 0.5, -0.5), "ground")
 Z = dict(field=0.01, gravel=0.03, pavement=0.06, concrete=0.09, road=0.06)
 for s in surfaces:
     add("surf_" + s["id"], ext(s["polygon"], 0.04, Z[s["kind"]]), s["kind"])
@@ -242,10 +259,28 @@ vs = [ext(rect(x - 0.06, -143.8, x + 0.06, -138.8), 0.02, 0.1) for x in np.arang
      [ext(rect(x - 0.06, -157.8, x + 0.06, -152.6), 0.02, 0.1) for x in np.arange(-15, 10.1, 2.8)]
 add("visitor_stripes", trimesh.util.concatenate(vs), "stripe")
 
-# retention basin: berm ring, floor, water, structures
-add("basin_berm", ext(basin_outer.difference(basin_inner), basin["berm_height"]), "berm")
-add("basin_floor", ext(basin_inner, 0.05, 0.0), "basin_floor")
-add("basin_water", ext(basin["water"], 0.05, 0.08), "water")
+# retention pond: sloped banks lofted between the rings, water at the bottom, reeds on the shore
+def loft(r0, z0, r1, z1):
+    n = len(r0)
+    v = [[x, y, z0] for x, y in r0] + [[x, y, z1] for x, y in r1]
+    f = []
+    for i in range(n):
+        j = (i + 1) % n
+        f += [[i, j, n + i], [j, n + j, n + i]]
+    return trimesh.Trimesh(vertices=v, faces=f, process=False)
+
+
+add("basin_bank_upper", loft(basin_rim, 0.0, basin_bench, -BENCH_DEPTH), "berm")
+add("basin_bank_lower", loft(basin_bench, -BENCH_DEPTH, basin_shore, -BASIN_DEPTH + 0.08), "basin_floor")
+add("basin_water", ext(Polygon(basin_shore).buffer(0.6), 0.3, -BASIN_DEPTH - 0.2), "water")
+_reeds = []
+for i in range(0, 96, 2):
+    if random.random() < 0.55:
+        x, y = basin_shore[i]
+        c_ = trimesh.creation.cone(radius=random.uniform(0.5, 0.9), height=random.uniform(1.0, 1.7), sections=5)
+        c_.apply_translation([x + random.uniform(-0.6, 0.6), y + random.uniform(-0.6, 0.6), -BASIN_DEPTH + 0.05])
+        _reeds.append(c_)
+add("basin_reeds", trimesh.util.concatenate(_reeds), "reeds")
 add("basin_structures", trimesh.util.concatenate([ext(rect(x - 1.5, y - 2, x + 1.5, y + 2), 0.9) for x, y in
                                                   basin["structures"]]), "concrete")
 

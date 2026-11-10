@@ -285,7 +285,7 @@ label('Entrance · CR 38', 30, -188, 6, 9, 'rgba(31,95,139,.92)');
     g.scene.traverse(o => {
       if (!o.isMesh) return;
       const n = o.name || (o.parent && o.parent.name) || '';
-      const flat = /^(surf_|ground|slot_|zone_|basin_floor|basin_water|cr38_|visitor_|aisle_)/.test(n);
+      const flat = /^(surf_|ground|slot_|zone_|basin_bank|basin_water|cr38_|visitor_|aisle_)/.test(n);
       o.castShadow = !flat; o.receiveShadow = true;
       const m = n.match(/^slot_(.+)$/);
       if (m && slot[m[1]]) { o.material = o.material.clone(); o.userData.id = m[1]; pick.push(o); mesh[m[1]] = o; }
