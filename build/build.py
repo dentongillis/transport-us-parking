@@ -80,10 +80,10 @@ def basin_ring(cx, cy, rx, ry, wobble=0.0, n=96, e=0.62):
     return out
 
 
-BASIN_DEPTH, BENCH_DEPTH = 2.4, 0.9
+BASIN_DEPTH, BENCH_DEPTH = 1.3, 0.5
 basin_rim = basin_ring(-11, 241.5, 57, 25.5)
-basin_bench = basin_ring(-8.5, 237.5, 50.5, 17.5, 0.03)
-basin_shore = basin_ring(-5.5, 232.5, 44, 10, 0.07)
+basin_bench = basin_ring(-11, 241.5, 53.5, 22.0, 0.012)
+basin_shore = basin_ring(-11, 241.5, 50.0, 18.5, 0.025)     # water fills the basin, centred, with even banks
 basin_outer = Polygon(basin_rim)
 basin = dict(id="retention_basin", name="Retention pond", rim=basin_rim, bench=basin_bench, water=basin_shore,
              bench_depth_m=BENCH_DEPTH, water_depth_below_grade_m=BASIN_DEPTH,
