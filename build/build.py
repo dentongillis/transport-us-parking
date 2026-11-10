@@ -45,8 +45,8 @@ LOT_POLY = [  # measured gravel edge, clockwise from NW
     [-30, -83], [-38, -79.5], [-47, -78], [-55, -77.5], [-58, -74], [-56, -50], [-60, -44], [-57, -24],
     [-60, -7], [-58.5, 6.5], [-61, 25], [-58, 45], [-62, 58], [-61, 76], [-63, 93], [-62, 115], [-64, 146], [-65, 170]]
 surfaces = [
-    dict(id="field_w", kind="field", name="Field (west)", polygon=rect(-145, -84, -81, 292)),
-    dict(id="field_e", kind="field", name="Field (east)", polygon=rect(77, -112, 125, 262)),
+    dict(id="field_w", kind="field", name="Field (west)", polygon=rect(-300, -84, -81, 292)),
+    dict(id="field_e", kind="field", name="Field (east)", polygon=[[77, -112], [300, -112], [300, 480], [130, 480], [130, 262], [77, 262]]),
     dict(id="field_sw", kind="field", name="Field (south-west)", polygon=rect(-145, -290, -8, -207)),
     dict(id="field_se", kind="field", name="Field (south-east)", polygon=rect(82, -290, 125, -207)),
     dict(id="gravel_lot", kind="gravel", name="Storage lot (gravel)", polygon=LOT_POLY),
@@ -65,7 +65,7 @@ surfaces = [
     dict(id="office_walk", kind="concrete", name="Office walk", polygon=rect(-16, -129, -13.5, -105.5)),
     dict(id="office_pad", kind="concrete", name="Concrete pad", polygon=rect(-21, -144, -14, -138)),
     dict(id="barn_pad", kind="concrete", name="Barn pad", polygon=rect(-115, -104.5, -84, -100.2)),
-    dict(id="cr38", kind="road", name="County Road 38", polygon=rect(-145, -202, 125, -194)),
+    dict(id="cr38", kind="road", name="County Road 38", polygon=rect(-300, -202, 300, -194)),
     dict(id="side_road", kind="road", name="Side road", polygon=rect(73, -290, 79, -202)),
 ]
 basin_outer = Polygon(stadium(-11, 241.5, 57, 25.5))
@@ -233,10 +233,10 @@ Z = dict(field=0.01, gravel=0.03, pavement=0.06, concrete=0.09, road=0.06)
 for s in surfaces:
     add("surf_" + s["id"], ext(s["polygon"], 0.04, Z[s["kind"]]), s["kind"])
 # road markings
-add("cr38_centre_line", ext(rect(-145, -198.12, 125, -197.88), 0.02, 0.1), "line")
-add("cr38_edge_n", ext(rect(-145, -194.75, 13, -194.6), 0.02, 0.1), "stripe")
-add("cr38_edge_n2", ext(rect(51, -194.75, 125, -194.6), 0.02, 0.1), "stripe")
-add("cr38_edge_s", ext(rect(-145, -201.4, 125, -201.25), 0.02, 0.1), "stripe")
+add("cr38_centre_line", ext(rect(-300, -198.12, 300, -197.88), 0.02, 0.1), "line")
+add("cr38_edge_n", ext(rect(-300, -194.75, 13, -194.6), 0.02, 0.1), "stripe")
+add("cr38_edge_n2", ext(rect(51, -194.75, 300, -194.6), 0.02, 0.1), "stripe")
+add("cr38_edge_s", ext(rect(-300, -201.4, 300, -201.25), 0.02, 0.1), "stripe")
 # visitor parking stripes
 vs = [ext(rect(x - 0.06, -143.8, x + 0.06, -138.8), 0.02, 0.1) for x in np.arange(-13, 9.6, 2.8)] + \
      [ext(rect(x - 0.06, -157.8, x + 0.06, -152.6), 0.02, 0.1) for x in np.arange(-15, 10.1, 2.8)]
