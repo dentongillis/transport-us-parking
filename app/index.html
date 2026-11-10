@@ -19,7 +19,9 @@
   button.danger.arm { background:var(--red); border-color:var(--red); color:#fff; }
   button.link { border:0; background:none; padding:4px 0; color:var(--accent); }
   #bar { position:absolute; top:10px; left:10px; display:flex; gap:6px; }
+  #bar { flex-wrap:wrap; right:60px; }
   #bar button { padding:7px 10px; font-size:13px; }
+  #bar button.on { background:var(--ink); border-color:var(--ink); color:#fff; }
   #compass { position:absolute; right:10px; top:10px; background:#fff; border:1px solid var(--line); border-radius:50%; width:40px; height:40px; display:grid; place-items:center; font-weight:700; font-size:11px; }
   #legend { position:absolute; left:10px; bottom:10px; display:flex; gap:12px; font-size:12px; background:rgba(255,255,255,.9); padding:6px 10px; border-radius:8px; }
   #legend i, .dot { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
@@ -90,6 +92,7 @@
       <button id="bTop">Map</button>
       <button id="b3d">3D</button>
       <button id="bEntr">Entrance</button>
+      <button id="bModel" aria-pressed="false">Model view</button>
     </div>
     <div id="compass" title="North"><span id="needle">N↑</span></div>
     <div id="legend"><span><i style="background:var(--green)"></i>Open</span><span><i style="background:var(--red)"></i>Occupied</span><span><i style="background:var(--yellow)"></i>Selected</span></div>
@@ -269,7 +272,7 @@ const dir = new THREE.Vector3();
 /* ================= data ================= */
 let db = null, assets = null, user = null, myId = null, canWrite = true, localMode = false;
 let stalls = {};            // stall id -> record (only occupied stalls have one)
-let selected = null, editing = false, moving = null, busy = false;
+let selected = null, editing = false, moving = null, busy = false, modelView = false;
 const LOCAL_KEY = 'tus-lot-app-v1';
 
 function setStatus(text, cls) { const s = $('status'); s.textContent = text; s.className = cls || ''; }
@@ -293,7 +296,7 @@ function paintAll() { Object.keys(mesh).forEach(paint); }
 
 function applySnapshot(next) {
   const ids = new Set([...Object.keys(stalls), ...Object.keys(next)]);
-  stalls = next; ids.forEach(paint); renderHome();
+  stalls = next; ids.forEach(paint); renderHome(); if (modelView) rebuildModels();
   if (selected && !editing) renderStall();
 }
 
@@ -478,6 +481,127 @@ async function moveTo(dest) {
   busy = false;
 }
 
+/* ================= generic unit models (Model view) =================
+   One low-poly model per unit type, built from primitives. Local frame: +x = front of the unit, y = up, origin at
+   the centre of its footprint on the ground. Each model is merged into one mesh per material and drawn instanced. */
+const lam = c => new THREE.MeshLambertMaterial({ color: c });
+const MAT = { body: lam(0xf4f3ee), trim: lam(0xd6d8d4), glass: lam(0x34424c), dark: lam(0x2a2e32), tire: lam(0x1c1e20), metal: lam(0x8b9195), wood: lam(0x9a7b55) };
+const ACC = { fifth_wheel: lam(0x2f6fa8), travel_trailer: lam(0x1f8f86), toy_hauler: lam(0xe07a1f), park_model: lam(0x5d4a3a), camper_van: lam(0xb8c0c7), motorhome: lam(0x8c2f3a), other: lam(0x9aa1a7) };
+const box = (l, h, w) => new THREE.BoxGeometry(l, h, w);
+const cyl = (r, h, n) => new THREE.CylinderGeometry(r, r, h, n || 14);
+function prof(pts, w) {          // side profile [x, y] extruded across the width
+  const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1]))), { depth: w, bevelEnabled: false });
+  g.translate(0, 0, -w / 2); return g;
+}
+function kit() {
+  const bins = new Map();
+  const k = {
+    add(mat, geo, x, y, z, rot) {
+      const g = geo.index ? geo.toNonIndexed() : geo.clone();
+      if (rot) { if (rot.x) g.rotateX(rot.x); if (rot.y) g.rotateY(rot.y); if (rot.z) g.rotateZ(rot.z); }
+      g.translate(x || 0, y || 0, z || 0);
+      if (!bins.has(mat)) bins.set(mat, []); bins.get(mat).push(g); return k;
+    },
+    wheels(xs, w, r, dual) { r = r || 0.37; xs.forEach(x => [1, -1].forEach(sd => { k.add(MAT.tire, cyl(r, 0.26), x, r, sd * (w / 2 - 0.13), { x: Math.PI / 2 }); k.add(MAT.trim, cyl(r * 0.5, 0.27, 10), x, r, sd * (w / 2 - 0.13), { x: Math.PI / 2 });
+      if (dual) k.add(MAT.tire, cyl(r, 0.26), x, r, sd * (w / 2 - 0.43), { x: Math.PI / 2 }); })); return k; },
+    windows(list, w, y, h) { list.forEach(([x, l]) => [1, -1].forEach(sd => k.add(MAT.glass, box(l, h || 0.6, 0.05), x, y, sd * (w / 2 + 0.012)))); return k; },
+    stripe(mat, l, w, y, h, x) { return k.add(mat, box(l, h, w + 0.05), x || 0, y, 0); },
+    door(w, x, y0, h) { h = h || 1.9; return k.add(MAT.trim, box(0.72, h, 0.05), x, y0 + h / 2, w / 2 + 0.016).add(MAT.glass, box(0.4, 0.45, 0.06), x, y0 + h - 0.45, w / 2 + 0.02); },
+    ac(x, y) { return k.add(MAT.trim, box(0.95, 0.28, 0.75), x, y + 0.14, 0); },
+    tongue(xf, y) {             // A-frame hitch, jack and propane bottles for bumper-pull trailers
+      [1, -1].forEach(sd => k.add(MAT.metal, box(1.45, 0.1, 0.1), xf + 0.62, y, sd * 0.33, { y: sd * 0.47 }));
+      k.add(MAT.metal, box(0.25, 0.12, 0.16), xf + 1.3, y, 0).add(MAT.metal, box(0.08, 0.75, 0.08), xf + 1.0, y - 0.25, 0);
+      [1, -1].forEach(sd => k.add(MAT.body, cyl(0.16, 0.5, 10), xf + 0.32, y + 0.36, sd * 0.2)); return k;
+    },
+    gooseneck(x, yUnder, legX, w) { k.add(MAT.metal, cyl(0.12, 0.34, 10), x, yUnder - 0.17, 0); [1, -1].forEach(sd => k.add(MAT.metal, box(0.11, 0.9, 0.11), legX, 0.45, sd * (w / 2 - 0.35))); return k; },
+    done(len, shift) {
+      const parts = [...bins].map(([mat, gs]) => {
+        let n = 0; gs.forEach(g => n += g.attributes.position.count);
+        const P = new Float32Array(n * 3), N = new Float32Array(n * 3); let o = 0;
+        gs.forEach(g => { P.set(g.attributes.position.array, o); N.set(g.attributes.normal.array, o); o += g.attributes.position.count * 3; });
+        const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+        if (shift) geo.translate(shift, 0, 0); return { mat, geo };
+      });
+      return { len, parts };
+    }
+  };
+  return k;
+}
+const UNIT_MODEL = {
+  travel_trailer: () => { const w = 2.5, a = ACC.travel_trailer; return kit()
+    .add(MAT.body, prof([[-3.8, 0.7], [3.65, 0.7], [3.8, 1.5], [3.5, 3.25], [-3.8, 3.25]], w))
+    .add(MAT.metal, box(7.6, 0.14, 1.9), 0, 0.63, 0).add(MAT.metal, box(0.12, 0.12, 2.4), -3.86, 0.62, 0)
+    .stripe(a, 7.3, w, 1.42, 0.24, -0.18).stripe(a, 7.2, w, 1.74, 0.07, -0.25)
+    .windows([[-2.5, 1.2], [-0.4, 0.9], [2.5, 0.8]], w, 2.3).door(w, 1.15, 0.78).wheels([-1.05, -0.15], w).ac(-0.6, 3.25).tongue(3.8, 0.62).done(8.9, -0.65); },
+  fifth_wheel: () => { const w = 2.5, a = ACC.fifth_wheel; return kit()
+    .add(MAT.body, prof([[-5.3, 0.9], [3.0, 0.9], [3.0, 2.0], [5.1, 2.0], [5.3, 2.6], [4.9, 3.9], [-5.3, 3.9]], w))
+    .add(MAT.metal, box(8.3, 0.14, 1.9), -1.15, 0.83, 0).add(MAT.metal, box(0.12, 0.12, 2.4), -5.36, 0.8, 0)
+    .stripe(a, 8.25, w, 1.6, 0.26, -1.17).stripe(a, 8.25, w, 1.95, 0.07, -1.17).add(a, box(2.1, 0.32, w + 0.05), 4.0, 2.75, 0)
+    .windows([[-3.9, 1.4], [-1.5, 1.2], [0.6, 0.9]], w, 2.75).windows([[4.05, 0.9]], w, 3.35, 0.42).door(w, 2.2, 0.98)
+    .wheels([-2.0, -1.1], w).ac(-1.5, 3.9).ac(2.2, 3.9).gooseneck(4.35, 2.0, 2.75, w).done(10.6); },
+  toy_hauler: () => { const w = 2.5, a = ACC.toy_hauler; return kit()
+    .add(MAT.body, prof([[-5.8, 0.9], [3.4, 0.9], [3.4, 2.0], [5.6, 2.0], [5.8, 2.6], [5.4, 4.0], [-5.8, 4.0]], w))
+    .add(MAT.metal, box(9.2, 0.14, 1.9), -1.2, 0.83, 0)
+    .add(a, box(0.05, 3.0, 2.44), -5.81, 2.42, 0).add(MAT.dark, box(0.06, 2.6, 2.1), -5.84, 2.35, 0).add(MAT.metal, box(0.07, 0.1, 2.1), -5.85, 2.35, 0)
+    .stripe(a, 9.15, w, 1.72, 0.5, -1.22).stripe(MAT.dark, 9.15, w, 2.1, 0.12, -1.22).add(MAT.dark, box(2.1, 0.5, w + 0.05), 4.3, 2.75, 0)
+    .windows([[-4.5, 0.7], [-1.0, 1.2], [1.3, 0.9]], w, 2.9, 0.55).windows([[4.4, 0.9]], w, 3.45, 0.42).door(w, 2.65, 0.98)
+    .wheels([-3.4, -2.5, -1.6], w).ac(-2.5, 4.0).ac(1.5, 4.0).gooseneck(4.7, 2.0, 3.15, w).done(11.6); },
+  park_model: () => { const w = 3.0, a = ACC.park_model, wall = MAT.trim;
+    const roof = new THREE.ExtrudeGeometry(new THREE.Shape([[-1.78, 3.02], [1.78, 3.02], [0, 4.15]].map(p => new THREE.Vector2(p[0], p[1]))), { depth: 11.5, bevelEnabled: false });
+    roof.rotateY(Math.PI / 2); roof.translate(-5.75, 0, 0);
+    const k = kit().add(MAT.dark, box(11.0, 0.5, w), 0, 0.25, 0).add(wall, box(9.0, 2.55, w), -1.0, 1.78, 0).add(a, roof)
+      .add(MAT.wood, box(2.0, 0.14, w), 4.5, 0.57, 0).add(MAT.wood, box(0.07, 0.07, w), 5.45, 1.45, 0)
+      .windows([[-4.0, 1.2], [-1.3, 1.5], [1.6, 1.1]], w, 2.0, 1.0)
+      .add(MAT.trim, box(0.05, 2.0, 0.9), 3.52, 1.64, -0.65).add(MAT.glass, box(0.06, 0.6, 0.5), 3.53, 2.15, -0.65).add(MAT.glass, box(0.06, 1.0, 1.0), 3.53, 2.0, 0.75)
+      .add(MAT.wood, box(0.9, 0.12, 0.9), 4.5, 0.2, -1.95).add(MAT.wood, box(0.9, 0.12, 0.6), 4.5, 0.4, -1.8);
+    [1, -1].forEach(sd => { k.add(MAT.body, box(0.12, 2.42, 0.12), 5.4, 1.81, sd * 1.4); for (let x = 3.6; x <= 5.4; x += 0.3) k.add(MAT.wood, box(0.05, 0.85, 0.05), x, 1.05, sd * 1.45); k.add(MAT.wood, box(1.9, 0.07, 0.07), 4.5, 1.45, sd * 1.45); });
+    return k.done(11.6); },
+  camper_van: () => { const w = 2.05, a = ACC.camper_van; return kit()
+    .add(a, prof([[-3.0, 0.5], [2.95, 0.5], [3.0, 1.15], [2.45, 1.32], [1.75, 2.6], [1.3, 2.8], [-2.9, 2.8], [-3.0, 2.5]], w))
+    .add(MAT.glass, box(1.36, 0.05, 1.78), 2.125, 1.975, 0, { z: 2.066 })
+    .windows([[1.15, 0.85]], w, 2.05, 0.62).windows([[-1.1, 1.5]], w, 2.1, 0.55)
+    .add(MAT.dark, box(0.12, 0.26, w - 0.05), 3.02, 0.58, 0).add(MAT.dark, box(0.1, 0.26, w - 0.05), -3.02, 0.58, 0).add(MAT.dark, box(5.2, 0.1, w + 0.04), 0, 0.6, 0)
+    .add(MAT.glass, box(0.05, 0.7, 1.5), -3.02, 2.0, 0).add(MAT.dark, box(1.7, 0.05, 1.25), -1.2, 2.83, 0).add(MAT.trim, box(0.6, 0.18, 0.6), 0.5, 2.89, 0)
+    .add(MAT.body, box(0.12, 0.1, 0.25), 2.98, 1.0, 0.75).add(MAT.body, box(0.12, 0.1, 0.25), 2.98, 1.0, -0.75)
+    .wheels([1.9, -1.75], w, 0.36).done(6.1); },
+  motorhome: () => { const w = 2.55, a = ACC.motorhome; const k = kit()
+    .add(MAT.body, prof([[-5.2, 0.6], [5.1, 0.6], [5.2, 1.4], [4.85, 3.5], [4.5, 3.6], [-5.2, 3.6]], w))
+    .add(MAT.glass, box(1.7, 0.05, 2.36), 5.065, 2.42, 0, { z: 1.752 })
+    .stripe(a, 10.25, w, 1.32, 0.34, -0.08).stripe(MAT.dark, 10.25, w, 1.68, 0.08, -0.08).stripe(a, 6.0, w, 0.85, 0.16, -2.2)
+    .windows([[3.7, 1.0], [1.0, 1.6], [-1.8, 1.4], [-4.0, 0.9]], w, 2.45, 0.75).door(w, 2.45, 0.7, 2.1)
+    .add(MAT.dark, box(0.14, 0.3, w - 0.05), 5.2, 0.72, 0).add(MAT.dark, box(0.12, 0.3, w - 0.05), -5.22, 0.72, 0)
+    .add(MAT.metal, cyl(0.09, 5.2, 8), -0.6, 3.38, w / 2 + 0.1, { z: Math.PI / 2 })
+    .add(MAT.body, box(0.12, 0.12, 0.3), 5.1, 1.2, 0.9).add(MAT.body, box(0.12, 0.12, 0.3), 5.1, 1.2, -0.9)
+    .ac(1.5, 3.6).ac(-2.2, 3.6).wheels([3.6], w, 0.45).wheels([-2.7], w, 0.45, true);
+    return k.done(10.5); },
+  other: () => { const w = 2.2, a = ACC.other; return kit()
+    .add(a, prof([[-2.5, 0.6], [2.2, 0.6], [2.5, 0.9], [2.5, 2.35], [2.2, 2.6], [-2.5, 2.6]], w))
+    .add(MAT.metal, box(5.0, 0.12, 1.7), 0, 0.55, 0).add(MAT.dark, box(0.05, 1.85, 0.05), -2.52, 1.6, 0).add(MAT.trim, box(0.04, 1.9, 2.0), -2.51, 1.6, 0)
+    .stripe(MAT.dark, 5.0, w, 0.72, 0.1, 0).door(w, 1.2, 0.7, 1.7)
+    .add(MAT.dark, box(1.1, 0.1, 0.34), -0.4, 0.82, w / 2 + 0.1).add(MAT.dark, box(1.1, 0.1, 0.34), -0.4, 0.82, -(w / 2 + 0.1))
+    .wheels([-0.4], w + 0.36).tongue(2.5, 0.55).done(6.3, -0.65); }
+};
+const modelCache = {}, modelGroup = new THREE.Group(); scene.add(modelGroup);
+const getModel = t => modelCache[t] || (modelCache[t] = (UNIT_MODEL[t] || UNIT_MODEL.other)());
+function rebuildModels() {
+  modelGroup.children.slice().forEach(m => modelGroup.remove(m));          // geometries are cached per type and reused
+  if (!modelView) return;
+  const byType = {}; Object.keys(stalls).forEach(id => { const t = UNIT_MODEL[stalls[id].type] ? stalls[id].type : 'other'; (byType[t] = byType[t] || []).push(id); });
+  const d = new THREE.Object3D();
+  Object.keys(byType).forEach(t => {
+    const ids = byType[t], mdl = getModel(t);
+    mdl.parts.forEach(pt => {
+      const im = new THREE.InstancedMesh(pt.geo, pt.mat, ids.length);
+      ids.forEach((id, i) => { const s = slot[id], k = Math.min(1, (s.length_m - 0.3) / mdl.len);
+        d.position.set(s.x, 0.05, -s.y); d.rotation.set(0, s.heading_deg * Math.PI / 180, 0); d.scale.set(k, k, k); d.updateMatrix(); im.setMatrixAt(i, d.matrix); });
+      im.instanceMatrix.needsUpdate = true; im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; im.userData.ids = ids;
+      modelGroup.add(im);
+    });
+  });
+}
+$('bModel').onclick = () => { modelView = !modelView; $('bModel').classList.toggle('on', modelView); $('bModel').setAttribute('aria-pressed', modelView); rebuildModels();
+  if (modelView && !Object.keys(stalls).length) toast('No units are parked yet – models appear on occupied stalls.'); };
+
 /* ================= picking ================= */
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
 canvas.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
@@ -486,7 +610,8 @@ canvas.addEventListener('pointerup', e => {
   const r = canvas.getBoundingClientRect();
   ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ptr, camera);
-  const hit = ray.intersectObjects(pick)[0], id = hit && hit.object.userData.id;
+  const hit = ray.intersectObjects(modelView ? pick.concat(modelGroup.children) : pick)[0];
+  const id = hit && (hit.object.userData.id || (hit.object.userData.ids && hit.object.userData.ids[hit.instanceId]));
   if (moving) { if (id && !busy) moveTo(id); return; }
   if (id) select(id); else if (!editing) select(null);
 });
