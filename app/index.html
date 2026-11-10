@@ -34,6 +34,7 @@
   header { padding:14px 16px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   h1 { font-size:17px; margin:0; letter-spacing:-.01em; white-space:nowrap; }
   #status { font-size:12px; color:var(--muted); white-space:nowrap; }
+  #bDriver { padding:7px 12px; font-size:13px; white-space:nowrap; }
   #status::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:#b5bcc0; margin-right:6px; }
   #status.live::before { background:var(--green); } #status.warn::before { background:var(--yellow); } #status.bad::before { background:var(--red); }
   #scroll { overflow:auto; padding:0 16px 20px; flex:1; -webkit-overflow-scrolling:touch; }
@@ -67,6 +68,15 @@
   .photos img { width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
   .photos .x { position:absolute; top:4px; right:4px; width:26px; height:26px; padding:0; border-radius:50%; background:rgba(0,0,0,.65); color:#fff; border:0; font-size:15px; line-height:1; }
   .photos .add { display:grid; place-items:center; border:1.5px dashed #b9c1bd; background:none; color:var(--muted); font-size:13px; border-radius:8px; aspect-ratio:1; padding:4px; }
+  #driver { position:fixed; inset:0; background:var(--panel); z-index:40; overflow:auto; -webkit-overflow-scrolling:touch; }
+  .dv { max-width:560px; margin:0 auto; padding:16px 16px 40px; }
+  .dvhead { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; } .dvhead h1 { font-size:22px; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .hint { font-size:13px; color:var(--muted); margin-top:6px; min-height:18px; } .hint.good { color:var(--green); font-weight:600; } .hint.bad { color:var(--red); font-weight:600; }
+  #dvStall { font-size:22px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; }
+  button.big { width:100%; padding:14px; font-size:16px; margin-top:18px; }
+  #dvDone { text-align:center; padding-top:40px; } #dvDone h2 { font-size:24px; margin:10px 0 4px; }
+  .ok { width:64px; height:64px; border-radius:50%; background:var(--green); color:#fff; font-size:34px; display:grid; place-items:center; margin:0 auto; }
   #lightbox { position:fixed; inset:0; background:rgba(0,0,0,.9); display:grid; place-items:center; z-index:50; }
   #lightbox img { max-width:96vw; max-height:92dvh; }
   #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:10px; font-size:14px; z-index:60; max-width:90vw; }
@@ -101,7 +111,7 @@
 
   <aside id="panel" class="peek">
     <button id="grab" aria-label="Expand or collapse panel"></button>
-    <header><h1>Transport US Lot</h1><span id="status">Connecting…</span></header>
+    <header><h1>Transport US Lot</h1><button id="bDriver" class="primary">Driver view</button></header>
     <div id="scroll">
 
       <!-- HOME: search + list -->
@@ -115,6 +125,7 @@
         <div class="chips" id="typeFilter"></div>
         <ul id="list"></ul>
         <div class="empty" id="listEmpty">No units are marked yet. Tap a green stall on the map to park one.</div>
+        <div class="note"><span id="status">Connecting…</span></div>
         <div class="note" id="roNote" hidden>You can view the lot, but you don't have permission to change stalls.</div>
       </section>
 
@@ -151,8 +162,10 @@
           <input id="fUnit" type="text" maxlength="24" autocomplete="off" autocapitalize="characters">
           <label class="f" for="fVin">VIN (last 8)</label>
           <input id="fVin" type="text" maxlength="17" autocomplete="off" autocapitalize="characters">
-          <label class="f" for="fModel">Make / model</label>
-          <input id="fModel" type="text" maxlength="48" autocomplete="off">
+          <label class="f" for="fMake">Make</label>
+          <input id="fMake" type="text" maxlength="32" autocomplete="off" placeholder="e.g. Jayco">
+          <label class="f" for="fModel">Model</label>
+          <input id="fModel" type="text" maxlength="48" autocomplete="off" placeholder="e.g. Jay Flight 264BH">
           <label class="f" for="fNotes">Notes</label>
           <textarea id="fNotes" rows="2" maxlength="300"></textarea>
           <label class="f">Photos</label>
@@ -168,6 +181,42 @@
       </section>
     </div>
   </aside>
+</div>
+<div id="driver" hidden>
+  <div class="dv">
+    <div class="dvhead"><h1>Driver view</h1><button id="bDvClose">Lot map</button></div>
+    <form id="dvForm">
+      <p class="sub">Type your stall or pick it from the list, add the unit details, and save.</p>
+      <label class="f" for="dvStall">Parking spot</label>
+      <input id="dvStall" type="text" list="dvStalls" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="e.g. C-12" inputmode="text">
+      <datalist id="dvStalls"></datalist>
+      <div class="hint" id="dvHint">Rows A–F run north to south; rows N and M are along the north edge.</div>
+      <label class="f">What kind of unit?</label>
+      <div class="chips" id="dvType"></div>
+      <div class="two">
+        <div><label class="f" for="dvMake">Make</label><input id="dvMake" type="text" maxlength="32" autocomplete="off" placeholder="e.g. Jayco"></div>
+        <div><label class="f" for="dvModel">Model</label><input id="dvModel" type="text" maxlength="48" autocomplete="off" placeholder="e.g. Jay Flight 264BH"></div>
+      </div>
+      <div class="two">
+        <div><label class="f" for="dvUnit">Unit #</label><input id="dvUnit" type="text" maxlength="24" autocomplete="off" autocapitalize="characters"></div>
+        <div><label class="f" for="dvVin">VIN (last 8)</label><input id="dvVin" type="text" maxlength="17" autocomplete="off" autocapitalize="characters"></div>
+      </div>
+      <label class="f" for="dvNotes">Notes</label>
+      <textarea id="dvNotes" rows="2" maxlength="300" placeholder="Damage, keys, anything the office should know"></textarea>
+      <label class="f">Pictures</label>
+      <div class="photos" id="dvPhotos"></div>
+      <div class="note" id="dvPhotoNote" hidden>Photo upload isn't available in this view.</div>
+      <input id="dvFile" type="file" accept="image/*" multiple hidden>
+      <button type="submit" class="primary big" id="dvSave">Park my unit</button>
+      <div class="note" id="dvRo" hidden>You don't have permission to change stalls.</div>
+    </form>
+    <div id="dvDone" hidden>
+      <div class="ok">✓</div>
+      <h2 id="dvDoneTitle"></h2>
+      <p class="sub" id="dvDoneSub"></p>
+      <div class="row"><button id="dvAnother" class="primary">Park another unit</button><button id="dvShow">Show on map</button></div>
+    </div>
+  </div>
 </div>
 <div id="lightbox" hidden><img id="lbImg" alt="Unit photo"></div>
 <div id="toast" hidden></div>
@@ -277,11 +326,12 @@ const LOCAL_KEY = 'tus-lot-app-v1';
 
 function setStatus(text, cls) { const s = $('status'); s.textContent = text; s.className = cls || ''; }
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 3200); }
+const mm = r => [r.make, r.model].filter(Boolean).join(' ');
 const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
 const okId = id => typeof id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(id);
 function normalize(d) {   // shared data is untrusted: coerce every field
   d = d && typeof d === 'object' ? d : {};
-  return { type: TYPE_NAME[d.type] ? d.type : 'other', unit: clean(d.unit, 24), vin: clean(d.vin, 17), model: clean(d.model, 48),
+  return { type: TYPE_NAME[d.type] ? d.type : 'other', unit: clean(d.unit, 24), vin: clean(d.vin, 17), make: clean(d.make, 32), model: clean(d.model, 48),
            notes: clean(d.notes, 300), photos: (Array.isArray(d.photos) ? d.photos : []).filter(okId).slice(0, MAX_PHOTOS),
            by: okId(d.by) || (typeof d.by === 'string' && d.by.length < 80) ? d.by : '', at: clean(d.at, 30) };
 }
@@ -296,7 +346,7 @@ function paintAll() { Object.keys(mesh).forEach(paint); }
 
 function applySnapshot(next) {
   const ids = new Set([...Object.keys(stalls), ...Object.keys(next)]);
-  stalls = next; ids.forEach(paint); renderHome(); if (modelView) rebuildModels();
+  stalls = next; ids.forEach(paint); renderHome(); if (modelView) rebuildModels(); if (dv) { dvOptions(); dvRender(); }
   if (selected && !editing) renderStall();
 }
 
@@ -360,12 +410,12 @@ function renderHome() {
   const q = $('q').value.trim().toLowerCase(), ul = $('list'); ul.textContent = '';
   const stallHit = q && LOT.slots.find(s => s.id.toLowerCase() === q || s.id.toLowerCase().replace('-', '') === q.replace(/[\s-]/g, ''));
   const rows = ids.filter(i => (!typeFilter || stalls[i].type === typeFilter) &&
-    (!q || [i, stalls[i].unit, stalls[i].vin, stalls[i].model].some(v => v.toLowerCase().includes(q)))).sort();
+    (!q || [i, stalls[i].unit, stalls[i].vin, stalls[i].make, stalls[i].model].some(v => v.toLowerCase().includes(q)))).sort();
   if (stallHit && !rows.includes(stallHit.id)) rows.unshift(stallHit.id);
   rows.slice(0, 400).forEach(id => {
     const r = stalls[id], li = document.createElement('li'), d = document.createElement('span'), t = document.createElement('span'), b = document.createElement('b'), s = document.createElement('span'), sid = document.createElement('span');
     d.className = 'dot'; d.style.background = r ? 'var(--red)' : 'var(--green)';
-    t.className = 't'; b.textContent = r ? (r.unit || 'No unit #') : 'Open stall'; s.textContent = r ? TYPE_NAME[r.type] + (r.model ? ' · ' + r.model : '') : 'Tap to park a unit here';
+    t.className = 't'; b.textContent = r ? (r.unit || 'No unit #') : 'Open stall'; s.textContent = r ? TYPE_NAME[r.type] + (mm(r) ? ' · ' + mm(r) : '') : 'Tap to park a unit here';
     t.append(b, s); sid.className = 'sid'; sid.textContent = id; li.append(d, t, sid);
     li.onclick = () => { select(id); focusOn(id); }; ul.append(li);
   });
@@ -406,7 +456,7 @@ function renderStall() {
   $('dView').firstElementChild.hidden = !r; $('dActions').hidden = !r || !canWrite; $('dPhotos').textContent = '';
   if (!r) return;
   $('dType').textContent = TYPE_NAME[r.type]; $('dUnit').textContent = r.unit || '–'; $('dVin').textContent = r.vin || '–';
-  $('dModel').textContent = r.model || '–'; $('dNotes').textContent = r.notes || '–';
+  $('dModel').textContent = mm(r) || '–'; $('dNotes').textContent = r.notes || '–';
   const t = new Date(r.at); $('dAt').textContent = isNaN(t) ? '–' : t.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
   $('dBy').textContent = r.by && r.by === myId ? 'You' : '–';
   if (user && r.by && r.by !== myId && !localMode) user.profiles([r.by]).then(ps => { if (selected === id && ps && ps[r.by]) $('dBy').textContent = ps[r.by].name || 'Someone'; }).catch(() => {});
@@ -414,9 +464,9 @@ function renderStall() {
 }
 function startEdit() {
   const r = stalls[selected];
-  draft = r ? { type: r.type, unit: r.unit, vin: r.vin, model: r.model, notes: r.notes, photos: r.photos.slice() } : { type: null, unit: '', vin: '', model: '', notes: '', photos: [] };
+  draft = r ? { type: r.type, unit: r.unit, vin: r.vin, make: r.make, model: r.model, notes: r.notes, photos: r.photos.slice() } : { type: null, unit: '', vin: '', make: '', model: '', notes: '', photos: [] };
   editing = true; $('dView').hidden = true; $('dForm').hidden = false;
-  $('fUnit').value = draft.unit; $('fVin').value = draft.vin; $('fModel').value = draft.model; $('fNotes').value = draft.notes;
+  $('fUnit').value = draft.unit; $('fVin').value = draft.vin; $('fMake').value = draft.make; $('fModel').value = draft.model; $('fNotes').value = draft.notes;
   $('bSave').textContent = r ? 'Save changes' : 'Park unit here'; $('bCancel').textContent = r ? 'Cancel' : 'Close';
   renderForm();
 }
@@ -436,20 +486,22 @@ async function shrink(file) {              // phone photos are large: resize to 
   cv.width = Math.round(src.width * k); cv.height = Math.round(src.height * k); cv.getContext('2d').drawImage(src, 0, 0, cv.width, cv.height);
   return new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('encode')), 'image/jpeg', 0.85));
 }
-$('file').addEventListener('change', async e => {
-  const files = [...e.target.files].slice(0, MAX_PHOTOS - draft.photos.length); e.target.value = '';
+async function uploadInto(e, getDraft, redraw) {
+  const d0 = getDraft(); if (!d0) return;
+  const files = [...e.target.files].slice(0, MAX_PHOTOS - d0.photos.length); e.target.value = '';
   if (!files.length || !assets || busy) return;
-  busy = 'photo'; renderForm();
+  busy = 'photo'; redraw();
   for (const f of files) {
-    try { const up = await assets.upload(await shrink(f), { type: 'image/jpeg' }); if (draft && okId(up.id)) draft.photos.push(up.id); }
+    try { const up = await assets.upload(await shrink(f), { type: 'image/jpeg' }); const d = getDraft(); if (d && okId(up.id)) d.photos.push(up.id); }
     catch (err) { const c = err && err.code; toast(c === 'too_large' ? 'That photo is too large.' : c === 'quota_or_state' ? 'Photo storage is full.' : c === 'rate_limited' ? 'Too many uploads – wait a moment.' : "Couldn't upload that photo."); break; }
   }
-  busy = false; if (draft) renderForm();
-});
+  busy = false; if (getDraft()) redraw();
+}
+$('file').addEventListener('change', e => uploadInto(e, () => draft, renderForm));
 $('dForm').addEventListener('submit', async e => {
   e.preventDefault(); if (!draft || !draft.type || busy) return;
   const id = selected, old = stalls[id];
-  const rec = { type: draft.type, unit: $('fUnit').value.trim(), vin: $('fVin').value.trim().toUpperCase(), model: $('fModel').value.trim(), notes: $('fNotes').value.trim(),
+  const rec = { type: draft.type, unit: $('fUnit').value.trim(), vin: $('fVin').value.trim().toUpperCase(), make: $('fMake').value.trim(), model: $('fModel').value.trim(), notes: $('fNotes').value.trim(),
                 photos: draft.photos.slice(0, MAX_PHOTOS), by: old ? old.by : (myId || ''), at: old ? old.at : new Date().toISOString() };
   busy = true; renderForm();
   try {
@@ -480,6 +532,68 @@ async function moveTo(dest) {
   catch (err) { fail(err); }
   busy = false;
 }
+
+/* ================= driver view ================= */
+let dv = null;          // {type, photos:[ids]} while the driver form is open
+function parseStall(v) {
+  const m = String(v || '').toUpperCase().replace(/\s+/g, '').match(/^([A-Z])-?0*(\d{1,2})$/);
+  const id = m ? m[1] + '-' + m[2].padStart(2, '0') : null; return id && slot[id] ? id : null;
+}
+function dvOptions() {
+  const dl = $('dvStalls'); dl.textContent = '';
+  LOT.slots.forEach(s => { const o = document.createElement('option'); o.value = s.id; o.label = stalls[s.id] ? 'Occupied' : 'Open'; dl.append(o); });
+}
+function dvRender() {
+  if (!dv) return;
+  const raw = $('dvStall').value.trim(), id = parseStall(raw), h = $('dvHint'), r = id && stalls[id];
+  h.className = 'hint' + (!raw ? '' : !id || r ? ' bad' : ' good');
+  h.textContent = !raw ? 'Rows A–F run north to south; rows N and M are along the north edge.' : !id ? 'No stall with that number. Check the row letter and number.' :
+    r ? id + ' already has ' + (r.unit ? 'unit ' + r.unit : 'a unit') + ' in it. Choose another stall, or edit it from the lot map.' :
+    id + ' is open · Row ' + slot[id].row + ', stall ' + slot[id].index + (slot[id].row === 'N' || slot[id].row === 'M' ? ' from the west' : ' from the north end');
+  [...$('dvType').children].forEach(b => b.classList.toggle('on', b.dataset.k === dv.type));
+  const box = $('dvPhotos'); box.textContent = '';
+  dv.photos.forEach((p, i) => box.append(photoEl(p, () => { dv.photos.splice(i, 1); dvRender(); })));
+  if (assets && dv.photos.length < MAX_PHOTOS) { const a = document.createElement('button'); a.type = 'button'; a.className = 'add'; a.textContent = busy === 'photo' ? 'Uploading…' : '+ Add picture'; a.disabled = !!busy; a.onclick = () => $('dvFile').click(); box.append(a); }
+  $('dvPhotoNote').hidden = !!assets; $('dvRo').hidden = canWrite;
+  $('dvSave').disabled = !id || !!r || !dv.type || !!busy || !canWrite;
+  $('dvSave').textContent = id && !r ? 'Park my unit in ' + id : 'Park my unit';
+}
+TYPES.forEach(([k, name]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.k = k; b.textContent = name; b.onclick = () => { dv.type = k; dvRender(); }; $('dvType').append(b); });
+function dvReset(keepStall) {
+  dv = { type: null, photos: [] };
+  ['dvMake', 'dvModel', 'dvUnit', 'dvVin', 'dvNotes'].forEach(i => $(i).value = ''); if (!keepStall) $('dvStall').value = '';
+  $('dvForm').hidden = false; $('dvDone').hidden = true; dvOptions(); dvRender();
+}
+function openDriver(prefill) {
+  $('driver').hidden = false; dvReset(); if (prefill) { $('dvStall').value = prefill; dvRender(); }
+  try { if (location.hash !== '#driver') location.hash = 'driver'; } catch (e) {}
+  $('driver').scrollTop = 0;
+}
+function closeDriver() { $('driver').hidden = true; dv = null; try { if (location.hash === '#driver') history.replaceState(null, '', location.pathname + location.search); } catch (e) { try { location.hash = ''; } catch (e2) {} } }
+$('bDriver').onclick = () => openDriver(selected && !stalls[selected] ? selected : '');
+$('bDvClose').onclick = closeDriver;
+$('dvStall').addEventListener('input', dvRender);
+$('dvStall').addEventListener('change', () => { const id = parseStall($('dvStall').value); if (id) $('dvStall').value = id; dvRender(); });
+$('dvFile').addEventListener('change', e => uploadInto(e, () => dv, dvRender));
+let dvLast = null;
+$('dvForm').addEventListener('submit', async e => {
+  e.preventDefault(); const id = parseStall($('dvStall').value);
+  if (!dv || !id || stalls[id] || !dv.type || busy) return;
+  const rec = { type: dv.type, unit: $('dvUnit').value.trim(), vin: $('dvVin').value.trim().toUpperCase(), make: $('dvMake').value.trim(), model: $('dvModel').value.trim(),
+                notes: $('dvNotes').value.trim(), photos: dv.photos.slice(0, MAX_PHOTOS), by: myId || '', at: new Date().toISOString() };
+  busy = true; dvRender();
+  try {
+    await writeStall(id, rec); dvLast = id;
+    $('dvDoneTitle').textContent = 'Parked in ' + id;
+    $('dvDoneSub').textContent = [TYPE_NAME[rec.type], mm(rec), rec.unit && 'Unit ' + rec.unit].filter(Boolean).join(' · ');
+    $('dvForm').hidden = true; $('dvDone').hidden = false; $('driver').scrollTop = 0;
+  } catch (err) { fail(err); }
+  busy = false; if (dv) dvRender();
+});
+$('dvAnother').onclick = () => dvReset();
+$('dvShow').onclick = () => { const id = dvLast; closeDriver(); if (id) { select(id); focusOn(id); } };
+addEventListener('hashchange', () => { if (location.hash === '#driver') { if ($('driver').hidden) openDriver(''); } else if (!$('driver').hidden) closeDriver(); });
+if (location.hash === '#driver') openDriver('');
 
 /* ================= generic unit models (Model view) =================
    One low-poly model per unit type, built from primitives. Local frame: +x = front of the unit, y = up, origin at
